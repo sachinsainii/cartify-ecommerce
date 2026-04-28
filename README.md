@@ -43,3 +43,9 @@ __pycache__/
 db.sqlite3
 node_modules/
 dist/
+
+📷 Screenshots
+Example:
+[!Home]
+<img width="1890" height="847" alt="image" src="https://github.com/user-attachments/assets/475994a9-a39c-458c-812e-88d3ea9e9e82" />
+
