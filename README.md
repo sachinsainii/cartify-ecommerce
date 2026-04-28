@@ -1,25 +1,45 @@
-# 🛒 E-commerce Web Application
+# 🛒 Cartify - E-commerce Web Application
 
-A full-stack e-commerce web application built using Django (backend) and React (frontend).
+A full-stack e-commerce platform built with Django (backend) and React (frontend), supporting authentication, product management, cart management, and order processing.
 
 ## 🚀 Features
-- User Authentication (Signup/Login with JWT)
-- Product Listing & Categories
-- Add to Cart
-- Order Placement
-- REST API integration
+- JWT Authentication (Login/Signup)
+- Product Listing & Category Filtering
+- Add to Cart & Order Placement
+- REST API Integration
 - Responsive UI
 
 ## 🛠 Tech Stack
+**Backend:** Django, Django REST Framework  
+**Frontend:** React (Vite), Tailwind CSS  
+**Database:** PostgreSQL / SQLite  
+
+## 📁 Project Structure
+ecommerce-app/
+│── backend(ecom)/          # Django project
+│── frontend/               # React app
+│── requirements.txt
+│── README.md
+│── .gitignore
+
+
+## ⚙️ Setup Instructions
+
 ### Backend:
-- Python
-- Django
-- Django REST Framework
+```bash
+cd backend
+pip install -r requirements.txt
+python manage.py runserver
 
 ### Frontend:
-- React (Vite)
-- Tailwind CSS
+cd frontend
+npm install
+npm run dev
 
-### Database:
-- PostgreSQL / SQLite
-
+## Clean .gitignore
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+node_modules/
+dist/

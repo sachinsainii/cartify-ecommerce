@@ -5,5 +5,5 @@ urlpatterns = [
     path("view/",view_cart),
     path("add/",add_to_cart),
     path("remove/<int:product_id>/",remove_from_cart),
-    path("cart/count/",cart_count),
+    path("count/",cart_count),
 ]

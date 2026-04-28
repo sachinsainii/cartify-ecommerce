@@ -16,13 +16,9 @@ class SignupSerializer(serializers.ModelSerializer):
         username = validated_data['username'],
         password = validated_data['password']
     )
-        refresh = RefreshToken.for_user(user)
+        # refresh = RefreshToken.for_user(user)
 
-        return {
-            "user": user,
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }
+        return user
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -41,7 +37,8 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User Not Found")
 
         # user = authenticate(email=email,password=password)
-        user = authenticate(request=self.context.get('request'), username=email, password=password)
+        # user = authenticate(request=self.context.get('request'), username=email, password=password)
+        user = authenticate(username=email, password=password)
 
         if user is None:
             raise serializers.ValidationError("Invalid Credentials")
@@ -66,3 +63,8 @@ class LogoutSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid Token")
 
         return data
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'image']

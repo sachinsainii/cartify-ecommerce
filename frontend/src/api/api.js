@@ -22,16 +22,20 @@ async function request(endpoint, options = {}) {
       data = null;
     }
 
-    // 🔐 Auto logout if token expired
+    // 🔐 Handle unauthorized
     if (res.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("refresh");
-      window.location.href = "/login";
+
+      // 🔥 better than reload
+      window.dispatchEvent(new Event("unauthorized"));
+
       throw new Error("Session expired");
     }
 
     if (!res.ok) {
-      throw new Error(data?.detail || "API Error");
+      // throw new Error(data?.detail || "API Error");
+      throw new Error(JSON.stringify(data));
     }
 
     return data;
@@ -43,11 +47,30 @@ async function request(endpoint, options = {}) {
 }
 
 
-// 🔹 Products
-export const getProducts = () => request("/products/");
+
+//  PRODUCTS (UPDATED)
+
+export const getProducts = async (search = "", category = "") => {
+  let url = "/products/?";
+
+  if (search) url += `search=${search}&`;
+  if (category) url += `category=${category}&`;
+
+   const data = await request(url);
+
+  return data.results || data 
+};
 
 
-// 🔹 Cart
+//  CATEGORIES (FIXED)
+
+export const getCategories = () =>
+  request("/products/categories/");
+
+
+
+//  CART
+
 export const addToCart = (id, quantity = 1) =>
   request("/cart/add/", {
     method: "POST",
@@ -61,12 +84,12 @@ export const removeFromCart = (id) =>
     method: "DELETE",
   });
 
-// ✅ FIXED
 export const getCartCount = () =>
   request("/cart/count/");
 
 
-// 🔹 Orders
+//  ORDERS
+
 export const placeOrder = () =>
   request("/orders/place/", { method: "POST" });
 
@@ -74,7 +97,9 @@ export const getOrders = () =>
   request("/orders/my-orders/");
 
 
-// 🔹 Auth
+
+//  AUTH
+
 export const loginUser = (email, password) =>
   request("/accounts/login/", {
     method: "POST",
@@ -85,4 +110,19 @@ export const signupUser = (data) =>
   request("/accounts/signup/", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+
+  // 🔹 PROFILE
+
+export const getProfile = () =>
+  request("/accounts/profile/");
+
+export const updateProfile = (formData) =>
+  request("/accounts/profile/", {
+    method: "PUT",
+    headers: {
+      // ❗ DO NOT set Content-Type for FormData
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: formData,
   });

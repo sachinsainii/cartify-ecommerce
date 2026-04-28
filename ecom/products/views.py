@@ -17,7 +17,7 @@ def product_list(request):
 
     #GET -> list all products
     if request.method == 'GET':
-        products = Product.objects.all()
+        products = Product.objects.all().order_by('id')
 
         #filter by category
         category_id = request.GET.get('category')
@@ -84,4 +84,10 @@ def product_detail(request,id):
         product.delete()
         return Response({"message":"Product deleted"},status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def category_list(request):
+    categories = Category.objects.all()
+    serializer = CategorySerializer(categories,many=True)
+    return Response(serializer.data)
 

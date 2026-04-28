@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
 import ProductList from "./pages/ProductList";
@@ -8,23 +9,14 @@ import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import ProductDetail from "./pages/ProductDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/Profile";
 
-import { useEffect } from "react";
-
-
-// 🔥 Scroll to top on route change
 function ScrollToTop() {
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+  useEffect(() => window.scrollTo(0, 0), [pathname]);
   return null;
 }
 
-
-// 🔥 404 Page
 function NotFound() {
   return (
     <div className="text-center mt-20">
@@ -34,29 +26,70 @@ function NotFound() {
   );
 }
 
-
 function App() {
+  const [search, setSearch] = useState("");
+
+  // 🌙 Dark mode state
+  // const [dark, setDark] = useState(() => {
+  //   return localStorage.getItem("theme") === "dark";
+  // });
+
+  // // ✅ FORCE correct theme on first load
+  // useEffect(() => {
+  //   const saved = localStorage.getItem("theme");
+
+  //   if (saved === "dark") {
+  //     document.documentElement.classList.add("dark");
+  //     setDark(true);
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //     setDark(false);
+  //   }
+  // }, []);
+
+  const [dark, setDark] = useState(() => {
+  return localStorage.getItem("theme") === "dark";
+});
+
+useEffect(() => {
+  document.documentElement.classList.toggle("dark", dark);
+  localStorage.setItem("theme", dark ? "dark" : "light");
+}, [dark]);
+
+  // ✅ Handle toggle
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
+
   return (
     <BrowserRouter>
       <ScrollToTop />
 
-      <div className="min-h-screen bg-gray-100">
+      {/* ✅ FIXED ROOT */}
+      {/* <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white transition-colors duration-300"> */}
+      <div className="bg-white dark:bg-gray-900 text-black dark:text-white p-4">
 
-        {/* 🔝 Navbar */}
-        <Navbar />
+        <Navbar
+          search={search}
+          setSearch={setSearch}
+          dark={dark}
+          setDark={setDark}
+        />
 
-        {/* 📦 Content */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <Routes>
 
-            {/* 🏠 Public Routes */}
-            <Route path="/" element={<ProductList />} />
-            {/* <Route path="/products/:id" element={<ProductDetail />} /> */}
+            <Route path="/" element={<ProductList search={search} />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
-            {/* 🔒 Protected Routes */}
             <Route
               path="/cart"
               element={
@@ -75,12 +108,19 @@ function App() {
               }
             />
 
-            {/* ❌ 404 */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<NotFound />} />
 
           </Routes>
         </div>
-
       </div>
     </BrowserRouter>
   );

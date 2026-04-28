@@ -38,12 +38,26 @@ function Signup() {
 
       toast.success("Signup successful 🎉");
       navigate("/");
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Signup failed");
-    } finally {
-      setLoading(false);
     }
+    // } catch (err) {
+    //   console.error(err);
+    //   toast.error(err.message || "Signup failed");
+    // } finally {
+    //   setLoading(false);
+    // }
+    catch (err) {
+  try {
+    const errors = JSON.parse(err.message);
+
+    // show clean messages
+    Object.values(errors).forEach(msgArr => {
+      toast.error(msgArr[0]);
+    });
+
+  } catch {
+    toast.error("Signup failed");
+  }
+}
   }
 
   return (

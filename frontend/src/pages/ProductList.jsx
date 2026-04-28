@@ -1,40 +1,66 @@
 import { useEffect, useState } from "react";
-import { getProducts, addToCart } from "../api/api";
+// import { addToCart } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { getProducts, getCategories, addToCart } from "../api/api";
 
-function ProductList() {
+function ProductList({search}) {
+  // const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_API_URL.replace("/api", "");
 
-  // 🔥 Load products
+  const API_URL = import.meta.env.VITE_API_URL;
+  const BASE_URL = API_URL.replace("/api", "");
+
+  // 🔥 Load categories
   useEffect(() => {
-    async function loadProducts() {
-      setLoading(true);
-      try {
-        const data = await getProducts();
-        setProducts(data.results || data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load products ❌");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProducts();
-  }, []);
+  async function loadCategories() {
+    const data = await getCategories();
+    setCategories(data);
+  }
 
-  // 🔥 Add to cart (FIXED)
+  loadCategories();
+}, []);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 500); // wait 500ms
+
+  return () => clearTimeout(timer);
+}, [search]);
+
+  // 🔥 Load products with filters
+  useEffect(() => {
+  async function loadProducts() {
+    // setLoading(true);
+
+    try {
+      const data = await getProducts(debouncedSearch, category);
+      // setProducts(data);
+      setProducts(data.results || data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadProducts();
+}, [debouncedSearch, category]);
+
+  // 🔥 Add to cart
   async function handleAddToCart(productId) {
     setAddingId(productId);
 
     try {
       await addToCart(productId, 1);
-
       toast.success("Added to cart 🛒");
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
@@ -52,16 +78,12 @@ function ProductList() {
   // 🔥 Loader
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Array(8)
-          .fill()
-          .map((_, i) => (
-            <div key={i} className="animate-pulse bg-white p-4 rounded shadow">
-              <div className="h-48 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 mt-3 w-3/4"></div>
-              <div className="h-4 bg-gray-300 mt-2 w-1/2"></div>
-            </div>
-          ))}
+      <div className="grid grid-cols-4 gap-6">
+        {Array(8).fill().map((_, i) => (
+          <div key={i} className="animate-pulse bg-white p-4 rounded shadow">
+            <div className="h-48 bg-gray-300 rounded"></div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -70,14 +92,30 @@ function ProductList() {
     <div>
       <h2 className="text-2xl font-bold mb-6">Products</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="flex gap-4 mb-6">
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border px-4 py-2 rounded"
+        >
+          <option value="">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* PRODUCTS */}
+      <div className="grid grid-cols-4 gap-6">
         {products.map((p) => (
           <div
             key={p.id}
             onClick={() => navigate(`/products/${p.id}`)}
-            className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl hover:scale-[1.02] transition cursor-pointer"
+            className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer"
           >
-            {/* Image */}
             <img
               src={
                 p.image
@@ -89,45 +127,21 @@ function ProductList() {
             />
 
             <div className="p-4">
-              <h3 className="font-semibold text-lg">{p.name}</h3>
+              <h3 className="font-semibold">{p.name}</h3>
               <p className="text-gray-500 text-sm">{p.category_name}</p>
 
-              <p className="text-xs text-gray-400 mt-1">
-                Stock: {p.stock}
-              </p>
+              <p className="text-blue-600 font-bold">₹{p.price}</p>
 
-              <div className="flex justify-between items-center mt-3">
-                <p className="text-xl font-bold text-blue-600">
-                  ₹{p.price}
-                </p>
-
-                {/* 🔥 FIXED BUTTON */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(p.id);
-                  }}
-                  disabled={p.stock === 0 || addingId === p.id}
-                  className={`px-3 py-1 rounded text-sm text-white ${
-                    p.stock === 0
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {addingId === p.id
-                    ? "Adding..."
-                    : p.stock === 0
-                    ? "Out of Stock"
-                    : "Add"}
-                </button>
-              </div>
-
-              {/* Out of stock */}
-              {p.stock === 0 && (
-                <p className="text-red-500 text-xs mt-2">
-                  This item is currently unavailable
-                </p>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(p.id);
+                }}
+                disabled={p.stock === 0 || addingId === p.id}
+                className="mt-2 bg-blue-600 text-white px-3 py-1 rounded"
+              >
+                {addingId === p.id ? "Adding..." : "Add"}
+              </button>
             </div>
           </div>
         ))}
